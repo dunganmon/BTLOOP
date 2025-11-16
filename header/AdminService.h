@@ -16,8 +16,13 @@ private:
     void addLibrarian(vector<Person*>& users, DataManager& dataManager);
     void viewAllUsers(const vector<Person*>& users);
     void deleteUser(vector<Person*>& users, vector<Book*>& books, vector<BorrowingRecord>& records);
+    void updateUserInfo(vector<Person*>& users);
+    bool isStudentIdTaken(const vector<Person*>& users, const string& studentId, int currentUserId);
+    bool isEmployeeIdTaken(const vector<Person*>& users, const string& employeeId, int currentUserId);
     void importBooks(vector<Book*>& books, DataManager& dataManager);
     void importUsers(vector<Person*>& users, DataManager& dataManager);
+    void changePassword(Admin* admin);
+
 };
 
 #endif 

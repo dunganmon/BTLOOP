@@ -17,9 +17,21 @@ string getLibrarianCurrentDate() {
        << setfill('0') << setw(2) << ltm->tm_mday;
     return ss.str();
 }
+string calculateDueDate(const string& dateStr, int daysToAdd) {
+    tm tm_in = {};
+    stringstream ss(dateStr);
+    ss >> get_time(&tm_in, "%Y-%m-%d");
+
+    tm_in.tm_mday += daysToAdd; // Cộng thêm số ngày
+    mktime(&tm_in); // Hàm này sẽ tự động sửa ngày (vd: 35/11 -> 05/12)
+
+    char buffer[11];
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d", &tm_in);
+    return string(buffer);
+}
 void LibrarianService::run(Librarian* librarian, vector<Person*>& users, vector<Book*>& books, vector<BorrowingRecord>& records, DataManager& dataManager) {
     int choice = 0;
-    while (choice!= 10) { 
+    while (choice!= 11) { 
         Menu::displayLibrarianMenu(librarian->getName());
         choice = Menu::getIntegerInput();
 
@@ -33,10 +45,11 @@ void LibrarianService::run(Librarian* librarian, vector<Person*>& users, vector<
             case 7: Menu::displaySortedBooks(books); break; 
             case 8: reviewPendingRequests(records, books); break;
             case 9: collectFines(users); break;
-            case 10: cout << "Dang xuat..." << endl; break;
+            case 10: changePassword(librarian); break;
+            case 11: cout << "Dang xuat..." << endl; break;
             default: cout << "Lua chon khong hop le. Vui long chon lai." << endl; break;
         }
-        if (choice!= 10) Menu::pause();
+        if (choice!= 11) Menu::pause();
     }
 }
 void LibrarianService::addBook(vector<Book*>& books, DataManager& dataManager) {
@@ -192,7 +205,7 @@ void LibrarianService::deleteBook(vector<Book*>& books, const vector<BorrowingRe
 
     bool isBorrowed = false;
     for (const auto& record : records) {
-        if (record.getBookId() == idToDelete && (record.getStatus() == 0 || record.getStatus() == 3)) { 
+        if (record.getBookId() == idToDelete && (record.getStatus() == 1 || record.getStatus() == 0)) { 
             isBorrowed = true;
             break;
         }
@@ -228,7 +241,7 @@ void LibrarianService::reviewPendingRequests(vector<BorrowingRecord>& records, v
     cout << "----------------------------------------------------------------------------------------" << endl;
 
     for (const auto& record : records) {
-        if (record.getStatus() == 3) {
+        if (record.getStatus() == 0) {
             for (const auto* book : books) {
                 if (book->getId() == record.getBookId()) {
                     cout << "| " << left << setw(8) << record.getRecordId()
@@ -257,7 +270,7 @@ void LibrarianService::reviewPendingRequests(vector<BorrowingRecord>& records, v
 
     for (auto it = records.begin(); it != records.end(); ++it) {
         
-        if (it->getRecordId() == recordIdToProcess && it->getStatus() == 3) {
+        if (it->getRecordId() == recordIdToProcess && it->getStatus() == 0) {
             
             cout << "Ban muon lam gi voi phieu muon " << recordIdToProcess << "?" << endl;
             cout << "1. Duyet" << endl;
@@ -284,10 +297,16 @@ void LibrarianService::reviewPendingRequests(vector<BorrowingRecord>& records, v
                 }
 
                 if (targetBook->getAvailableQuantity() > 0) {
-                    targetBook->borrowBook(); 
-                    it->setStatus(0); 
-                    it->setBorrowDate(getLibrarianCurrentDate());
+                    targetBook->borrowBook();
+                    const int borrowDaysLimit = 15; 
+                    string currentDate = getLibrarianCurrentDate();
+                    string dueDate = calculateDueDate(currentDate, borrowDaysLimit); 
+                    it->setStatus(1);
+                    it->setBorrowDate(currentDate);
+                    it->setDueDate(dueDate); 
+
                     cout << "Da duyet thanh cong phieu muon " << recordIdToProcess << "." << endl;
+                    cout << "Ngay muon: " << currentDate << " | Han tra: " << dueDate << endl;
                 } else {
                     cout << "LOI: Sach '" << targetBook->getTitle() << "' da het." << endl;
                     cout << "He thong se tu dong huy yeu cau nay." << endl;
@@ -375,4 +394,29 @@ void LibrarianService::collectFines(vector<Person*>& users) {
     } else {
         cout << "Da huy thao tac xoa no." << endl;
     }
+}
+
+
+void LibrarianService::changePassword(Librarian* librarian) {
+    cout << "--- Doi Mat Khau ---" << endl;
+    cout << "Nhap mat khau cu: ";
+    string oldPass = Menu::getStringNoSpaces();
+
+    if (oldPass != librarian->getPassword()) {
+        cout << "Mat khau cu không dung. Thao tac bi huy." << endl;
+        return;
+    }
+
+    string newPass = Menu::getStringPassword(); // Hàm này đã có validation
+    
+    cout << "Xac nhan mat khau moi: ";
+    string confirmPass = Menu::getStringNoSpaces();
+
+    if (newPass != confirmPass) {
+        cout << "Mat khau xac nhan không khop. Thao tac bi huy." << endl;
+        return;
+    }
+
+    librarian->setPassword(newPass);
+    cout << "Doi mat khau thanh cong!" << endl;
 }

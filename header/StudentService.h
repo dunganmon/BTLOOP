@@ -18,6 +18,7 @@ private:
     void reportLostBook(Student* student, vector<Book*>& books, vector<BorrowingRecord>& records);
     int countMyBorrowedBooks(Student* student, const vector<BorrowingRecord>& allRecords);
     void cancelBorrowRequest(Student* student, vector<BorrowingRecord>& records);
+    void changePassword(Student* student);
 };
 
 #endif 

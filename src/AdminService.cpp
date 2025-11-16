@@ -19,7 +19,7 @@ string getAdminCurrentDate() {
 }
 void AdminService::run(Admin* admin, vector<Person*>& users, vector<Book*>& books, vector<BorrowingRecord>& records, DataManager& dataManager) {
     int choice = 0;
-    while (choice!= 9) { 
+    while (choice!= 11) { 
         Menu::displayAdminMenu(admin->getName());
         choice = Menu::getIntegerInput();
 
@@ -30,12 +30,14 @@ void AdminService::run(Admin* admin, vector<Person*>& users, vector<Book*>& book
             case 4: addLibrarian(users, dataManager); break;
             case 5: viewAllUsers(users); break;
             case 6: deleteUser(users, books, records); break;
-            case 7: importBooks(books, dataManager); break; 
-            case 8: importUsers(users, dataManager); break;
-            case 9: cout << "Dang xuat..." << endl; break;
+            case 7: updateUserInfo(users); break;
+            case 8: importBooks(books, dataManager); break; 
+            case 9: importUsers(users, dataManager); break;
+            case 10: changePassword(admin); break;
+            case 11: cout << "Dang xuat..." << endl; break;
             default: cout << "Lua chon khong hop le. Vui long chon lai." << endl; break;
         }
-        if (choice!= 9) Menu::pause();
+        if (choice!= 11) Menu::pause();
     }
 }
 void AdminService::addLibrarian(vector<Person*>& users, DataManager& dataManager) {
@@ -121,11 +123,43 @@ void AdminService::deleteUser(vector<Person*>& users, vector<Book*>& books, vect
         return;
     }
 
+    Person* userToDelete = nullptr;
+    for (auto* user : users) {
+        if (user->getId() == idToDelete) {
+            userToDelete = user;
+            break;
+        }
+    }
+
+    if (userToDelete == nullptr) {
+        cout << "Khong tim thay nguoi dung voi ID " << idToDelete << "." << endl;
+        return;
+    }
+
+    if (Student* s = dynamic_cast<Student*>(userToDelete)) {
+        if (s->getFineAmount() > 0) {
+            cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+            cout << "!! CANH BAO: Sinh vien '" << s->getName() << "' (ID: " << idToDelete << ")" << endl;
+            cout << "!! dang no: " << fixed << setprecision(0) << s->getFineAmount() << " VND." << endl;
+            cout << "!! Ban co chac chan van muon xoa khong?" << endl;
+            cout << "!! 1. Co (Xoa vinh vien)" << endl;
+            cout << "!! 0. Khong (Huy thao tac)" << endl;
+            cout << "!! Lua chon cua ban: ";
+            int confirm = Menu::getIntegerInput();
+            if (confirm != 1) {
+                cout << "Thao tac xoa da duoc huy." << endl;
+                return; 
+            }
+            cout << "!! Da xac nhan xoa. Dang tien hanh..." << endl;
+            cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << endl;
+        }
+    }
+
     bool isBorrowing = false;
     for (auto& record : records) {
-        if (record.getStudentId() == idToDelete && record.getStatus() == 0) {
+        if (record.getStudentId() == idToDelete && record.getStatus() == 1) {
             isBorrowing = true;
-            record.setStatus(1); 
+            record.setStatus(2); 
             record.setReturnDate(getAdminCurrentDate()); 
             
             for (auto* book : books) {
@@ -143,7 +177,7 @@ void AdminService::deleteUser(vector<Person*>& users, vector<Book*>& books, vect
 
     bool isPending = false;
     for (auto it = records.begin(); it != records.end();) {
-        if (it->getStudentId() == idToDelete && it->getStatus() == 3) {
+        if (it->getStudentId() == idToDelete && it->getStatus() == 0) {
             it = records.erase(it); 
             isPending = true;
         } else {
@@ -189,4 +223,132 @@ void AdminService::importUsers(vector<Person*>& users, DataManager& dataManager)
     getline(cin >> ws, filename);
 
     dataManager.importUsersFromFile(filename, users);
+}
+
+void AdminService::changePassword(Admin* admin) {
+    cout << "--- Doi Mat Khau ---" << endl;
+    cout << "Nhap mat khau cu: ";
+    string oldPass = Menu::getStringNoSpaces();
+
+    if (oldPass != admin->getPassword()) {
+        cout << "Mat khau cu khong dung. Thao tac bi huy." << endl;
+        return;
+    }
+
+    string newPass = Menu::getStringPassword(); 
+    
+    cout << "Xac nhan mat khau moi: ";
+    string confirmPass = Menu::getStringNoSpaces();
+
+    if (newPass != confirmPass) {
+        cout << "Mat khau xac nhan khong khop. Thao tac bi huy." << endl;
+        return;
+    }
+
+    admin->setPassword(newPass);
+    cout << "Doi mat khau thanh cong!" << endl;
+}
+
+
+// Kiểm tra trùng MSSV 
+bool AdminService::isStudentIdTaken(const vector<Person*>& users, const string& studentId, int currentUserId) {
+    for (const auto& user : users) {
+        if (user->getId() == currentUserId) continue; 
+        if (Student* s = dynamic_cast<Student*>(user)) {
+            if (s->getStudentId() == studentId) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Kiểm tra trùng Mã NV 
+bool AdminService::isEmployeeIdTaken(const vector<Person*>& users, const string& employeeId, int currentUserId) {
+    for (const auto& user : users) {
+        if (user->getId() == currentUserId) continue; 
+        if (Librarian* l = dynamic_cast<Librarian*>(user)) {
+            if (l->getEmployeeId() == employeeId) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void AdminService::updateUserInfo(vector<Person*>& users) {
+    viewAllUsers(users);
+    cout << "--- Cap Nhat Thong Tin Nguoi Dung ---" << endl;
+    cout << "Nhap ID nguoi dung ban muon cap nhat (nhap 0 de huy): ";
+    int idToUpdate = Menu::getIntegerInput();
+
+    if (idToUpdate == 0) return;
+    if (idToUpdate == 101) {
+        cout << "Khong the cap nhat thong tin Admin mac dinh tu day." << endl;
+        return;
+    }
+
+    Person* userToUpdate = nullptr;
+    for (auto* user : users) {
+        if (user->getId() == idToUpdate) {
+            userToUpdate = user;
+            break;
+        }
+    }
+
+    if (userToUpdate == nullptr) {
+        cout << "Khong tim thay nguoi dung voi ID: " << idToUpdate << endl;
+        return;
+    }
+    cout << "Da tim thay nguoi dung: " << userToUpdate->getName() << endl;
+    cout << "Nhap ten moi (de trong de giu nguyen [" << userToUpdate->getName() << "]): ";
+    string newName;
+    getline(cin, newName);
+    if (!newName.empty()) {
+        userToUpdate->setName(newName);
+        cout << "Da cap nhat Ten." << endl;
+    }
+    if (Student* s = dynamic_cast<Student*>(userToUpdate)) {
+        cout << "Nhap MSSV moi (de trong de giu nguyen [" << s->getStudentId() << "]): ";
+        string newStudentId;
+        getline(cin, newStudentId);
+        if (!newStudentId.empty()) {
+            if (isStudentIdTaken(users, newStudentId, idToUpdate)) {
+                cout << "Loi: MSSV nay da ton tai. Cap nhat MSSV THAT BAI." << endl;
+            } else {
+                s->setStudentId(newStudentId);
+                cout << "Da cap nhat MSSV." << endl;
+            }
+        }
+
+        cout << "Nhap Lop moi (de trong de giu nguyen [" << s->getStudentClass() << "]): ";
+        string newClass;
+        getline(cin, newClass);
+        if (!newClass.empty()) {
+            s->setStudentClass(newClass);
+            cout << "Da cap nhat Lop." << endl;
+        }
+
+        cout << "Nhap Khoa hoc moi (nhap -1 de giu nguyen [" << s->getCourseYear() << "]): ";
+        int newYear = Menu::getIntegerInput();
+        if (newYear != -1) {
+            s->setCourseYear(newYear);
+            cout << "Da cap nhat Khoa hoc." << endl;
+        }
+
+    } else if (Librarian* l = dynamic_cast<Librarian*>(userToUpdate)) {
+        cout << "Nhap Ma NV moi (de trong de giu nguyen [" << l->getEmployeeId() << "]): ";
+        string newEmployeeId;
+        getline(cin, newEmployeeId);
+        if (!newEmployeeId.empty()) {
+            if (isEmployeeIdTaken(users, newEmployeeId, idToUpdate)) {
+                cout << "Loi: Ma NV nay da ton tai. Cap nhat Ma NV THAT BAI." << endl;
+            } else {
+                l->setEmployeeId(newEmployeeId);
+                cout << "Da cap nhat Ma NV." << endl;
+            }
+        }
+    }
+
+    cout << "Cap nhat thong tin hoan tat!" << endl;
 }

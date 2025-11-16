@@ -17,6 +17,7 @@ private:
     void deleteBook(vector<Book*>& books, const vector<BorrowingRecord>& records);
     void reviewPendingRequests(vector<BorrowingRecord>& records, vector<Book*>& books);
     void collectFines(vector<Person*>& users);
+    void changePassword(Librarian* librarian);
 };
 
 #endif

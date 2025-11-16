@@ -132,14 +132,15 @@ void DataManager::loadAllData(vector<Person*>& users, vector<Book*>& books, vect
             tokens.push_back(item);
         }
 
-        if (tokens.size() == 6) {
+        if (tokens.size() == 7) {
             int recordId = stoi(tokens[0]);
             int bookId = stoi(tokens[1]);
             int userId = stoi(tokens[2]);
             string borrowDate = tokens[3];
-            string returnDate = tokens[4];
-            int status = stoi(tokens[5]);
-            records.push_back(BorrowingRecord(recordId, bookId, userId, borrowDate, returnDate, status));
+            string dueDate = tokens[4];
+            string returnDate = tokens[5];
+            int status = stoi(tokens[6]);
+            records.push_back(BorrowingRecord(recordId, bookId, userId, borrowDate, dueDate, returnDate, status));
         }
     }
     recordFileStream.close();

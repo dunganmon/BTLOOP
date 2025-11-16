@@ -16,7 +16,7 @@ string getCurrentDate() {
 int StudentService::countMyBorrowedBooks(Student* student, const vector<BorrowingRecord>& allRecords) {
     int count = 0;
     for (const auto& record : allRecords) {
-        if (record.getStudentId() == student->getId() && (record.getStatus() == 0 || record.getStatus() == 3)) {
+        if (record.getStudentId() == student->getId() && (record.getStatus() == 1 || record.getStatus() == 0)) {
             count++;
         }
     }
@@ -26,7 +26,7 @@ int StudentService::countMyBorrowedBooks(Student* student, const vector<Borrowin
 
 void StudentService::run(Student* student, vector<Book*>& books, vector<BorrowingRecord>& records, DataManager& dataManager) {
     int choice = 0;
-    while (choice!= 10) {
+    while (choice!= 11) {
         Menu::displayStudentMenu(student->getName());
         choice = Menu::getIntegerInput();
 
@@ -40,10 +40,11 @@ void StudentService::run(Student* student, vector<Book*>& books, vector<Borrowin
             case 7: returnBook(student, books, records); break;
             case 8: reportLostBook(student, books, records); break;
             case 9: viewMyInfo(student, records, books); break;
-            case 10: cout << "Dang xuat..." << endl; break;
+            case 10: changePassword(student); break;
+            case 11: cout << "Dang xuat..." << endl; break;
             default: cout << "Lua chon khong hop le. Vui long chon lai." << endl; break;
         }
-        if (choice!= 10) Menu::pause();
+        if (choice!= 11) Menu::pause();
     }
 }
 
@@ -60,7 +61,7 @@ void StudentService::viewMyInfo(Student* student, const vector<BorrowingRecord>&
     cout << "-------------------------------------------------------------------" << endl;
 
     for (const auto& record : allRecords) {
-        if (record.getStudentId() == student->getId() && record.getStatus() == 0) { 
+        if (record.getStudentId() == student->getId() && record.getStatus() == 1) { 
             for (const auto* book : allBooks) { 
                 if (book->getId() == record.getBookId()) {
                     cout << "| " << left << setw(8) << record.getRecordId()
@@ -88,7 +89,7 @@ void StudentService::viewMyInfo(Student* student, const vector<BorrowingRecord>&
     cout << "-------------------------------------------------------------------" << endl;
 
     for (const auto& record : allRecords) {
-        if (record.getStudentId() == student->getId() && record.getStatus() == 3) { // 3 = Chờ duyệt
+        if (record.getStudentId() == student->getId() && record.getStatus() == 0) { // 0 = Chờ duyệt
             for (const auto* book : allBooks) { 
                 if (book->getId() == record.getBookId()) {
                     cout << "| " << left << setw(8) << record.getRecordId()
@@ -115,7 +116,7 @@ void StudentService::viewMyInfo(Student* student, const vector<BorrowingRecord>&
     cout << "-------------------------------------------------" << endl;
 
     for (const auto& record : allRecords) {
-        if (record.getStudentId() == student->getId() && record.getStatus() == 2) { 
+        if (record.getStudentId() == student->getId() && record.getStatus() == 3) { 
             for (const auto* book : allBooks) { 
                 if (book->getId() == record.getBookId()) {
                     cout << "| " << left << setw(8) << record.getRecordId()
@@ -178,7 +179,7 @@ void StudentService::borrowBook(Student* student, vector<Book*>& books, vector<B
 
     for (int i = 0; i < quantityToBorrow; i++) {
         int newRecordId = dataManager.getNextRecordId();
-        records.push_back(BorrowingRecord(newRecordId, bookId, student->getId(), getCurrentDate(), "N/A", 3));
+        records.push_back(BorrowingRecord(newRecordId, bookId, student->getId(), getCurrentDate(), "N/A", "N/A", 0));
     }
 
     cout << "Da gui thanh cong " << quantityToBorrow << " yeu cau muon sach '" << targetBook->getTitle() << "'!" << endl;
@@ -197,7 +198,7 @@ void StudentService::returnBook(Student* student, vector<Book*>& books, vector<B
     cout << "-------------------------------------------------------------------" << endl;
 
     for (const auto& record : records) {
-        if (record.getStudentId() == student->getId() && record.getStatus() == 0) { 
+        if (record.getStudentId() == student->getId() && record.getStatus() == 1) { 
             for (const auto* book : books) { 
                 if (book->getId() == record.getBookId()) {
                     cout << "| " << left << setw(8) << record.getRecordId()
@@ -222,8 +223,20 @@ void StudentService::returnBook(Student* student, vector<Book*>& books, vector<B
     int recordId = Menu::getIntegerInput();
 
     for (auto& record : records) {
-        if (record.getRecordId() == recordId && record.getStudentId() == student->getId() && record.getStatus() == 0) {
-            record.setStatus(1); 
+        if (record.getRecordId() == recordId && record.getStudentId() == student->getId() && record.getStatus() == 1) {
+            string returnDate = getCurrentDate();
+            string dueDate = record.getDueDate();
+            if (returnDate > dueDate) {
+                double fine = 10000.0; 
+                student->addFine(fine);
+                cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+                cout << "!! Ban da tra sach tre han. Phat: " << fixed << setprecision(0) << fine << " VND." << endl;
+                cout << "!! Han tra: " << dueDate << " | Ngay tra: " << returnDate << endl;
+                cout << "!! Tong no hien tai: " << student->getFineAmount() << " VND." << endl;
+                cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << endl;
+            }
+
+            record.setStatus(2); 
             record.setReturnDate(getCurrentDate());
             for (auto* book : books) { 
                 if (book->getId() == record.getBookId()) {
@@ -250,7 +263,7 @@ void StudentService::reportLostBook(Student* student, vector<Book*>& books, vect
     cout << "-------------------------------------------------------------------" << endl;
 
     for (const auto& record : records) {
-        if (record.getStudentId() == student->getId() && record.getStatus() == 0) { 
+        if (record.getStudentId() == student->getId() && record.getStatus() == 1) { 
             for (const auto* book : books) { 
                 if (book->getId() == record.getBookId()) {
                     cout << "| " << left << setw(8) << record.getRecordId()
@@ -275,8 +288,15 @@ void StudentService::reportLostBook(Student* student, vector<Book*>& books, vect
     int recordId = Menu::getIntegerInput();
 
     for (auto& record : records) {
-        if (record.getRecordId() == recordId && record.getStudentId() == student->getId() && record.getStatus() == 0) {
-            record.setStatus(2); 
+        if (record.getRecordId() == recordId && record.getStudentId() == student->getId() && record.getStatus() == 1) {
+            string lostDate = getCurrentDate();
+            string dueDate = record.getDueDate();
+            if (lostDate > dueDate) {
+                double overdueFine = 10000.0; 
+                student->addFine(overdueFine);
+                cout << "\n!! Ban bi phat tre han: " << fixed << setprecision(0) << overdueFine << " VND." << endl;
+            }
+            record.setStatus(3); 
             record.setReturnDate(getCurrentDate());
             
             for (auto* book : books) { 
@@ -307,7 +327,7 @@ void StudentService::cancelBorrowRequest(Student* student, vector<BorrowingRecor
     cout << "-------------------------------------------------" << endl;
 
     for (const auto& record : records) {
-        if (record.getStudentId() == student->getId() && record.getStatus() == 3) {
+        if (record.getStudentId() == student->getId() && record.getStatus() == 0) {
             cout << "| " << left << setw(8) << record.getRecordId()
                  << "| " << left << setw(8) << record.getBookId()
                  << "| " << left << setw(25) << record.getBorrowDate() << " |" << endl;
@@ -329,7 +349,7 @@ void StudentService::cancelBorrowRequest(Student* student, vector<BorrowingRecor
     for (auto it = records.begin(); it != records.end(); ++it) {
         if (it->getRecordId() == recordIdToCancel && 
             it->getStudentId() == student->getId() && 
-            it->getStatus() == 3) 
+            it->getStatus() == 0) 
         {
             records.erase(it);
             cout << "Da huy thanh cong yeu cau co ID: " << recordIdToCancel << "." << endl;
@@ -338,4 +358,28 @@ void StudentService::cancelBorrowRequest(Student* student, vector<BorrowingRecor
     }
 
     cout << "Khong tim thay yeu cau hop le voi ID: " << recordIdToCancel << "." << endl;
+}
+
+void StudentService::changePassword(Student* student) {
+    cout << "--- Doi Mat Khau ---" << endl;
+    cout << "Nhap mat khau cu: ";
+    string oldPass = Menu::getStringNoSpaces();
+
+    if (oldPass != student->getPassword()) {
+        cout << "Mat khau cu không dung. Thao tac bi huy." << endl;
+        return;
+    }
+
+    string newPass = Menu::getStringPassword(); 
+    
+    cout << "Xac nhan mat khau moi: ";
+    string confirmPass = Menu::getStringNoSpaces();
+
+    if (newPass != confirmPass) {
+        cout << "Mat khau xac nhan không khop. Thao tac bi huy." << endl;
+        return;
+    }
+
+    student->setPassword(newPass);
+    cout << "Doi mat khau thanh cong!" << endl;
 }

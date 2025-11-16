@@ -170,9 +170,11 @@ void Menu::displayAdminMenu(const string& adminName) {
     cout << "|| 4. Them Tai Khoan Thu Thu            ||" << endl;
     cout << "|| 5. Xem Tat Ca Tai Khoan              ||" << endl;
     cout << "|| 6. Xoa Tai Khoan Nguoi Dung          ||" << endl;
-    cout << "|| 7. Nhap Sach Hang Loat (CSV)         ||" << endl; 
-    cout << "|| 8. Nhap User Hang Loat (CSV)         ||" << endl; 
-    cout << "|| 9. Dang Xuat                         ||" << endl; 
+    cout << "|| 7. Cap Nhat Thong Tin User           ||" << endl;
+    cout << "|| 8. Nhap Sach Hang Loat (CSV)         ||" << endl; 
+    cout << "|| 9. Nhap User Hang Loat (CSV)         ||" << endl; 
+    cout << "|| 10. Doi Mat Khau                     ||" << endl;
+    cout << "|| 11. Dang Xuat                        ||" << endl; 
     cout << "==========================================" << endl;
     cout << "Vui long chon: ";
 }
@@ -191,7 +193,8 @@ void Menu::displayLibrarianMenu(const string& librarianName) {
     cout << "|| 7. Xem Sach Sap Xep                ||" << endl;
     cout << "|| 8. Duyet Yeu Cau Muon Sach         ||" << endl; 
     cout << "|| 9. Thu Tien Phat                   ||" << endl;
-    cout << "|| 10. Dang Xuat                      ||" << endl;
+    cout << "|| 10. Doi Mat Khau                   ||" << endl;
+    cout << "|| 11. Dang Xuat                      ||" << endl;
     cout << "========================================" << endl;
     cout << "Vui long chon: ";
 }
@@ -210,7 +213,8 @@ void Menu::displayStudentMenu(const string& studentName) {
     cout << "|| 7. Tra Sach                           ||" << endl;
     cout << "|| 8. Bao Mat Sach (co phat)             ||" << endl;
     cout << "|| 9. Xem Thong Tin Ca Nhan & Sach Muon  ||" << endl;
-    cout << "|| 10. Dang Xuat                         ||" << endl;
+    cout << "|| 10. Doi Mat Khau                      ||" << endl;
+    cout << "|| 11. Dang Xuat                         ||" << endl;
     cout << "===========================================" << endl;
     cout << "Vui long chon: ";
 }
