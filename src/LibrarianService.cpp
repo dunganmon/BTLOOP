@@ -1,27 +1,42 @@
 #include "LibrarianService.h"
 #include "Menu.h"
+#include "Student.h"
 #include "Newspaper.h"
 #include "Magazine.h"
 #include "Textbook.h"
 #include "Novel.h"
-
-void LibrarianService::run(Librarian* librarian, vector<Book*>& books, DataManager& dataManager) {
+#include <ctime>     
+#include <sstream>  
+#include <iomanip>
+string getLibrarianCurrentDate() {
+    time_t now = time(0);
+    tm *ltm = localtime(&now);
+    stringstream ss;
+    ss << (1900 + ltm->tm_year) << "-" 
+       << setfill('0') << setw(2) << (1 + ltm->tm_mon) << "-" 
+       << setfill('0') << setw(2) << ltm->tm_mday;
+    return ss.str();
+}
+void LibrarianService::run(Librarian* librarian, vector<Person*>& users, vector<Book*>& books, vector<BorrowingRecord>& records, DataManager& dataManager) {
     int choice = 0;
-    while (choice!= 7) { 
+    while (choice!= 10) { 
         Menu::displayLibrarianMenu(librarian->getName());
         choice = Menu::getIntegerInput();
 
         switch (choice) {
             case 1: addBook(books, dataManager); break;
             case 2: editBook(books); break;
-            case 3: Menu::viewAllBooks(books); break;
-            case 4: searchBook(books); break;
-            case 5: Menu::displayBooksByType(books); break;  
-            case 6: Menu::displaySortedBooks(books); break; 
-            case 7: cout << "Dang xuat..." << endl; break;
+            case 3: deleteBook(books, records); break;
+            case 4: Menu::viewAllBooks(books); break;
+            case 5: searchBook(books); break;
+            case 6: Menu::displayBooksByType(books); break;  
+            case 7: Menu::displaySortedBooks(books); break; 
+            case 8: reviewPendingRequests(records, books); break;
+            case 9: collectFines(users); break;
+            case 10: cout << "Dang xuat..." << endl; break;
             default: cout << "Lua chon khong hop le. Vui long chon lai." << endl; break;
         }
-        if (choice!= 7) Menu::pause();
+        if (choice!= 10) Menu::pause();
     }
 }
 void LibrarianService::addBook(vector<Book*>& books, DataManager& dataManager) {
@@ -167,4 +182,197 @@ void LibrarianService::editBook(vector<Book*>& books) {
 
 void LibrarianService::searchBook(const vector<Book*>& books) {
     Menu::searchAndDisplayBooks(books);
+}
+
+void LibrarianService::deleteBook(vector<Book*>& books, const vector<BorrowingRecord>& records) {
+    Menu::viewAllBooks(books);
+    cout << "--- Xoa Sach ---" << endl;
+    cout << "Nhap ID sach can xoa: ";
+    int idToDelete = Menu::getIntegerInput();
+
+    bool isBorrowed = false;
+    for (const auto& record : records) {
+        if (record.getBookId() == idToDelete && (record.getStatus() == 0 || record.getStatus() == 3)) { 
+            isBorrowed = true;
+            break;
+        }
+    }
+
+    if (isBorrowed) {
+        cout << "Loi: Khong the xoa sach nay. Dang co sinh vien muon hoac cho duyet." << endl;
+        return;
+    }
+
+    for (auto it = books.begin(); it != books.end(); ++it) {
+        if ((*it)->getId() == idToDelete) {
+            delete *it; 
+            books.erase(it);
+            cout << "Da xoa sach co ID " << idToDelete << "." << endl;
+            return;
+        }
+    }
+    cout << "Khong tim thay sach voi ID " << idToDelete << "." << endl;
+}
+
+void LibrarianService::reviewPendingRequests(vector<BorrowingRecord>& records, vector<Book*>& books) {
+    Menu::clearScreen();
+    cout << "--- Duyet Yeu Cau Muon Sach ---" << endl;
+    
+    bool hasRequests = false;
+    cout << "----------------------------------------------------------------------------------------" << endl;
+    cout << "| " << left << setw(8) << "ID Phieu"
+         << "| " << left << setw(8) << "ID Sach"
+         << "| " << left << setw(35) << "Tieu de"
+         << "| " << left << setw(10) << "ID SV"
+         << "| " << left << setw(15) << "Ngay yeu cau" << " |" << endl;
+    cout << "----------------------------------------------------------------------------------------" << endl;
+
+    for (const auto& record : records) {
+        if (record.getStatus() == 3) {
+            for (const auto* book : books) {
+                if (book->getId() == record.getBookId()) {
+                    cout << "| " << left << setw(8) << record.getRecordId()
+                         << "| " << left << setw(8) << book->getId()
+                         << "| " << left << setw(35) << book->getTitle()
+                         << "| " << left << setw(10) << record.getStudentId()
+                         << "| " << left << setw(15) << record.getBorrowDate() << " |" << endl;
+                    hasRequests = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!hasRequests) {
+        cout << "| " << left << setw(84) << "Khong co yeu cau muon sach nao dang cho." << " |" << endl;
+        cout << "----------------------------------------------------------------------------------------" << endl;
+        return;
+    }
+    cout << "----------------------------------------------------------------------------------------" << endl;
+
+    cout << "\nNhap ID Phieu muon ban muon xu ly (nhap 0 de thoat): ";
+    int recordIdToProcess = Menu::getIntegerInput();
+
+    if (recordIdToProcess == 0) return;
+
+    for (auto it = records.begin(); it != records.end(); ++it) {
+        
+        if (it->getRecordId() == recordIdToProcess && it->getStatus() == 3) {
+            
+            cout << "Ban muon lam gi voi phieu muon " << recordIdToProcess << "?" << endl;
+            cout << "1. Duyet" << endl;
+            cout << "2. Huy" << endl;
+            cout << "0. Quay lai" << endl;
+            cout << "Lua chon cua ban: ";
+            int actionChoice = Menu::getIntegerInput();
+            
+            if (actionChoice == 1) { 
+                
+                Book* targetBook = nullptr;
+                for (auto* book : books) {
+                    if (book->getId() == it->getBookId()) {
+                        targetBook = book;
+                        break;
+                    }
+                }
+
+                if (targetBook == nullptr) {
+                    cout << "LOI: Khong tim thay sach. Phieu bi loi." << endl;
+                    records.erase(it); 
+                    cout << "Phieu loi da duoc tu dong huy." << endl;
+                    return;
+                }
+
+                if (targetBook->getAvailableQuantity() > 0) {
+                    targetBook->borrowBook(); 
+                    it->setStatus(0); 
+                    it->setBorrowDate(getLibrarianCurrentDate());
+                    cout << "Da duyet thanh cong phieu muon " << recordIdToProcess << "." << endl;
+                } else {
+                    cout << "LOI: Sach '" << targetBook->getTitle() << "' da het." << endl;
+                    cout << "He thong se tu dong huy yeu cau nay." << endl;
+                    records.erase(it); 
+                }
+
+            } else if (actionChoice == 2) { 
+                
+                records.erase(it);
+                cout << "Da huy phieu muon " << recordIdToProcess << " theo quyet dinh cua Thu thu." << endl;
+
+            } else if (actionChoice == 0) { 
+                return; 
+            
+            } else {
+                cout << "Lua chon khong hop le." << endl;
+            }
+            
+            return; 
+        }
+    }
+
+    cout << "Khong tim thay ID Phieu muon: " << recordIdToProcess << " (hoac da duoc xu ly)." << endl;
+}
+void LibrarianService::collectFines(vector<Person*>& users) {
+    Menu::clearScreen();
+    cout << "--- Thu Tien Phat Cua Sinh Vien ---" << endl;
+    cout << "--- Danh Sach Sinh Vien Dang No ---" << endl;
+    
+    bool hasDebt = false;
+    cout << "----------------------------------------------------------------------" << endl;
+    cout << "| " << left << setw(15) << "MSSV"
+         << "| " << left << setw(25) << "Ten Sinh Vien"
+         << "| " << left << setw(22) << "So Tien No (VND)" << " |" << endl;
+    cout << "----------------------------------------------------------------------" << endl;
+
+    for (auto* user : users) {
+        if (Student* s = dynamic_cast<Student*>(user)) {
+            if (s->getFineAmount() > 0) {
+                cout << "| " << left << setw(15) << s->getStudentId()
+                     << "| " << left << setw(25) << s->getName()
+                     << "| " << left << setw(22) << fixed << setprecision(0) << s->getFineAmount() << " |" << endl;
+                hasDebt = true;
+            }
+        }
+    }
+
+    if (!hasDebt) {
+        cout << "| " << left << setw(66) << "Khong co sinh vien nao no tien phat." << " |" << endl;
+        cout << "----------------------------------------------------------------------" << endl;
+        return;
+    }
+    cout << "----------------------------------------------------------------------" << endl;
+
+    cout << "\nNhap Ma So Sinh Vien (MSSV) ban muon xoa no: ";
+    string mssv = Menu::getStringNoSpaces();
+    
+    Student* targetStudent = nullptr;
+    for (auto* user : users) {
+        if (Student* s = dynamic_cast<Student*>(user)) {
+            if (s->getStudentId() == mssv) {
+                targetStudent = s;
+                break;
+            }
+        }
+    }
+
+    if (targetStudent == nullptr || targetStudent->getFineAmount() == 0) {
+        cout << "Khong tim thay sinh vien co no voi MSSV: " << mssv << endl;
+        return;
+    }
+    
+    double currentDebt = targetStudent->getFineAmount();
+    cout << "Tim thay sinh vien: " << targetStudent->getName() << " | No: " << currentDebt << " VND" << endl;
+    
+    cout << "\nBan co chac chan muon xac nhan sinh vien da thanh toan TOAN BO so no nay khong?" << endl;
+    cout << "1. Co (Xoa no)" << endl;
+    cout << "0. Khong (Huy)" << endl;
+    cout << "Lua chon: ";
+    int choice = Menu::getIntegerInput();
+    
+    if (choice == 1) {
+        targetStudent->payFine(currentDebt); 
+        cout << "Xoa no thanh cong! So no con lai: 0 VND." << endl;
+    } else {
+        cout << "Da huy thao tac xoa no." << endl;
+    }
 }

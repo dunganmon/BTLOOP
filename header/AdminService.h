@@ -16,9 +16,6 @@ private:
     void addLibrarian(vector<Person*>& users, DataManager& dataManager);
     void viewAllUsers(const vector<Person*>& users);
     void deleteUser(vector<Person*>& users, vector<Book*>& books, vector<BorrowingRecord>& records);
-    void addBook(vector<Book*>& books, DataManager& dataManager);
-    void editBook(vector<Book*>& books);
-    void deleteBook(vector<Book*>& books, const vector<BorrowingRecord>& records);
     void importBooks(vector<Book*>& books, DataManager& dataManager);
     void importUsers(vector<Person*>& users, DataManager& dataManager);
 };

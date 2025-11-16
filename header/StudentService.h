@@ -16,9 +16,8 @@ private:
     void borrowBook(Student* student, vector<Book*>& books, vector<BorrowingRecord>& records, DataManager& dataManager);
     void returnBook(Student* student, vector<Book*>& books, vector<BorrowingRecord>& records);
     void reportLostBook(Student* student, vector<Book*>& books, vector<BorrowingRecord>& records);
-    void reportFoundBook(Student* student, vector<Book*>& books, vector<BorrowingRecord>& records);
-
     int countMyBorrowedBooks(Student* student, const vector<BorrowingRecord>& allRecords);
+    void cancelBorrowRequest(Student* student, vector<BorrowingRecord>& records);
 };
 
 #endif 

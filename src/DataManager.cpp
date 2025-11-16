@@ -167,6 +167,9 @@ void DataManager::saveAllData(const vector<Person*>& users, const vector<Book*>&
     recordFileStream.close();
 }
 
+// Nằm trong file: DataManager.cpp
+
+// **** THAY THẾ TOÀN BỘ HÀM NÀY BẰNG CODE BÊN DƯỚI ****
 bool DataManager::importBooksFromFile(const string& filename, vector<Book*>& books) {
     ifstream fileStream(filename);
     if (!fileStream.is_open()) {
@@ -175,10 +178,17 @@ bool DataManager::importBooksFromFile(const string& filename, vector<Book*>& boo
     }
 
     string line;
-    int successCount = 0;
+    // --- Counters mới để báo cáo chi tiết ---
+    int newCount = 0;
+    int updateCount = 0;
     int failCount = 0;
+    
+    // (Tùy chọn) Bỏ qua dòng tiêu đề
+    // getline(fileStream, line); 
 
     while (getline(fileStream, line)) {
+        if (line.empty()) continue; // Bỏ qua các dòng trống
+
         stringstream ss(line);
         string item;
         vector<string> tokens;
@@ -192,22 +202,40 @@ bool DataManager::importBooksFromFile(const string& filename, vector<Book*>& boo
                 string title = tokens[1];
                 string author = tokens[2];
                 int pubYear = stoi(tokens[3]);
-                int total = stoi(tokens[4]);
+                int quantityToAdd = stoi(tokens[4]); 
                 
-                if (pubYear > 2025 || pubYear <= 0 || total <= 0 || bookType < 1 || bookType > 4) {
+                if (pubYear > 2025 || pubYear <= 0 || quantityToAdd <= 0 || bookType < 1 || bookType > 4) {
                      cout << "LOI: Du lieu khong hop le (Nam/SoLuong/Loai) -> " << line << endl;
                      failCount++;
                      continue;
                 }
+                bool bookFound = false;
+                for (auto* existingBook : books) {
+                    if (existingBook->getBookType() == bookType &&
+                        existingBook->getTitle() == title &&
+                        existingBook->getAuthor() == author &&
+                        existingBook->getPublicationYear() == pubYear) 
+                    {
+                        existingBook->setTotalQuantity(existingBook->getTotalQuantity() + quantityToAdd);
+                        existingBook->setAvailableQuantity(existingBook->getAvailableQuantity() + quantityToAdd);
+                        
+                        bookFound = true;
+                        updateCount++; 
+                        break; 
+                    }
+                }
 
-                int newId = getNextBookId(); 
+                if (!bookFound) {
+                    int newId = getNextBookId(); 
 
-                if (bookType == 1) books.push_back(new Newspaper(newId, title, author, total, total, pubYear));
-                else if (bookType == 2) books.push_back(new Magazine(newId, title, author, total, total, pubYear));
-                else if (bookType == 3) books.push_back(new Textbook(newId, title, author, total, total, pubYear));
-                else if (bookType == 4) books.push_back(new Novel(newId, title, author, total, total, pubYear));
-                
-                successCount++;
+                    if (bookType == 1) books.push_back(new Newspaper(newId, title, author, quantityToAdd, quantityToAdd, pubYear));
+                    else if (bookType == 2) books.push_back(new Magazine(newId, title, author, quantityToAdd, quantityToAdd, pubYear));
+                    else if (bookType == 3) books.push_back(new Textbook(newId, title, author, quantityToAdd, quantityToAdd, pubYear));
+                    else if (bookType == 4) books.push_back(new Novel(newId, title, author, quantityToAdd, quantityToAdd, pubYear));
+                    
+                    newCount++; 
+                }
+
             } catch (const std::exception& e) {
                 cout << "LOI: Dong bi loi dinh dang (khong phai so) -> " << line << endl;
                 failCount++;
@@ -220,7 +248,9 @@ bool DataManager::importBooksFromFile(const string& filename, vector<Book*>& boo
     fileStream.close();
     cout << "----------------------------------------" << endl;
     cout << "Nhap Sach Hoan Tat." << endl;
-    cout << "Thanh cong: " << successCount << " | That bai: " << failCount << endl;
+    cout << "Sach moi them: " << newCount 
+         << " | Sach cap nhat SL: " << updateCount 
+         << " | That bai: " << failCount << endl;
     return true;
 }
 

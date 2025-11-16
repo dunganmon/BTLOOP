@@ -36,7 +36,6 @@ int Menu::getIntegerInput() {
     cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
     return choice;
 }
-
 string Menu::getStringNoSpaces() {
     string line;
     while (true) {
@@ -165,18 +164,15 @@ void Menu::displayAdminMenu(const string& adminName) {
     cout << "==========================================" << endl;
     cout << "   MENU ADMIN - " << adminName            << endl;
     cout << "==========================================" << endl;
-    cout << "|| 1. Them Sach Moi                     ||" << endl;
-    cout << "|| 2. Chinh Sua Thong Tin Sach          ||" << endl;
-    cout << "|| 3. Xoa Sach                          ||" << endl;
-    cout << "|| 4. Xem Toan Bo Sach                  ||" << endl;
-    cout << "|| 5. Xem Sach Theo Loai                ||" << endl; 
-    cout << "|| 6. Xem Sach Sap Xep                  ||" << endl; 
-    cout << "|| 7. Them Tai Khoan Thu Thu            ||" << endl;
-    cout << "|| 8. Xem Tat Ca Tai Khoan              ||" << endl;
-    cout << "|| 9. Xoa Tai Khoan Nguoi Dung          ||" << endl;
-    cout << "|| 10. Nhap Sach Hang Loat (CSV)        ||" << endl; 
-    cout << "|| 11. Nhap User Hang Loat (CSV)        ||" << endl; 
-    cout << "|| 12. Dang Xuat                        ||" << endl; 
+    cout << "|| 1. Xem Toan Bo Sach                  ||" << endl;
+    cout << "|| 2. Xem Sach Theo Loai                ||" << endl; 
+    cout << "|| 3. Xem Sach Sap Xep                  ||" << endl; 
+    cout << "|| 4. Them Tai Khoan Thu Thu            ||" << endl;
+    cout << "|| 5. Xem Tat Ca Tai Khoan              ||" << endl;
+    cout << "|| 6. Xoa Tai Khoan Nguoi Dung          ||" << endl;
+    cout << "|| 7. Nhap Sach Hang Loat (CSV)         ||" << endl; 
+    cout << "|| 8. Nhap User Hang Loat (CSV)         ||" << endl; 
+    cout << "|| 9. Dang Xuat                         ||" << endl; 
     cout << "==========================================" << endl;
     cout << "Vui long chon: ";
 }
@@ -188,31 +184,34 @@ void Menu::displayLibrarianMenu(const string& librarianName) {
     cout << "========================================" << endl;
     cout << "|| 1. Them Sach Moi                   ||" << endl;
     cout << "|| 2. Chinh Sua Thong Tin Sach        ||" << endl;
-    cout << "|| 3. Xem Toan Bo Sach                ||" << endl;
-    cout << "|| 4. Tim Kiem Sach                   ||" << endl;
-    cout << "|| 5. Xem Sach Theo Loai              ||" << endl; 
-    cout << "|| 6. Xem Sach Sap Xep                ||" << endl; 
-    cout << "|| 7. Dang Xuat                       ||" << endl;
+    cout << "|| 3. Xoa Sach                        ||" << endl;
+    cout << "|| 4. Xem Toan Bo Sach                ||" << endl;
+    cout << "|| 5. Tim Kiem Sach                   ||" << endl;
+    cout << "|| 6. Xem Sach Theo Loai              ||" << endl; 
+    cout << "|| 7. Xem Sach Sap Xep                ||" << endl;
+    cout << "|| 8. Duyet Yeu Cau Muon Sach         ||" << endl; 
+    cout << "|| 9. Thu Tien Phat                   ||" << endl;
+    cout << "|| 10. Dang Xuat                      ||" << endl;
     cout << "========================================" << endl;
     cout << "Vui long chon: ";
 }
 
 void Menu::displayStudentMenu(const string& studentName) {
     clearScreen();
-    cout << "==========================================" << endl;
+    cout << "===========================================" << endl;
     cout << "   MENU SINH VIEN - " << studentName        << endl;
-    cout << "==========================================" << endl;
-    cout << "|| 1. Tim Kiem Sach                     ||" << endl;
-    cout << "|| 2. Xem Toan Bo Sach                  ||" << endl;
-    cout << "|| 3. Xem Sach Theo Loai                ||" << endl; 
-    cout << "|| 4. Xem Sach Sap Xep                  ||" << endl; 
-    cout << "|| 5. Muon Sach                         ||" << endl;
-    cout << "|| 6. Tra Sach                          ||" << endl;
-    cout << "|| 7. Bao Mat Sach (co phat)            ||" << endl;
-    cout << "|| 8. Bao Tim Duoc Sach Da Mat          ||" << endl;
-    cout << "|| 9. Xem Thong Tin Ca Nhan & Sach Muon ||" << endl;
-    cout << "|| 10. Dang Xuat                        ||" << endl;
-    cout << "==========================================" << endl;
+    cout << "===========================================" << endl;
+    cout << "|| 1. Tim Kiem Sach                      ||" << endl;
+    cout << "|| 2. Xem Toan Bo Sach                   ||" << endl;
+    cout << "|| 3. Xem Sach Theo Loai                 ||" << endl; 
+    cout << "|| 4. Xem Sach Sap Xep                   ||" << endl; 
+    cout << "|| 5. Gui Yeu Cau Muon Sach              ||" << endl;
+    cout << "|| 6. Huy Yeu Cau Muon Sach              ||" << endl;
+    cout << "|| 7. Tra Sach                           ||" << endl;
+    cout << "|| 8. Bao Mat Sach (co phat)             ||" << endl;
+    cout << "|| 9. Xem Thong Tin Ca Nhan & Sach Muon  ||" << endl;
+    cout << "|| 10. Dang Xuat                         ||" << endl;
+    cout << "===========================================" << endl;
     cout << "Vui long chon: ";
 }
 

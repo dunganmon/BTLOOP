@@ -70,7 +70,7 @@ int main() {
                     if (Admin* admin = dynamic_cast<Admin*>(loggedInUser)) {
                         adminService.run(admin, allUsers, allBooks, allRecords, dataManager); 
                     } else if (Librarian* librarian = dynamic_cast<Librarian*>(loggedInUser)) {
-                        librarianService.run(librarian, allBooks, dataManager); 
+                        librarianService.run(librarian, allUsers, allBooks, allRecords, dataManager); 
                     } else if (Student* student = dynamic_cast<Student*>(loggedInUser)) {
                         studentService.run(student, allBooks, allRecords, dataManager); 
                     }

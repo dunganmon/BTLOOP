@@ -16,7 +16,7 @@ string getCurrentDate() {
 int StudentService::countMyBorrowedBooks(Student* student, const vector<BorrowingRecord>& allRecords) {
     int count = 0;
     for (const auto& record : allRecords) {
-        if (record.getStudentId() == student->getId() && record.getStatus() == 0) {
+        if (record.getStudentId() == student->getId() && (record.getStatus() == 0 || record.getStatus() == 3)) {
             count++;
         }
     }
@@ -36,9 +36,9 @@ void StudentService::run(Student* student, vector<Book*>& books, vector<Borrowin
             case 3: Menu::displayBooksByType(books); break;    
             case 4: Menu::displaySortedBooks(books); break;   
             case 5: borrowBook(student, books, records, dataManager); break;
-            case 6: returnBook(student, books, records); break;
-            case 7: reportLostBook(student, books, records); break;
-            case 8: reportFoundBook(student, books, records); break;
+            case 6: cancelBorrowRequest(student, records); break;
+            case 7: returnBook(student, books, records); break;
+            case 8: reportLostBook(student, books, records); break;
             case 9: viewMyInfo(student, records, books); break;
             case 10: cout << "Dang xuat..." << endl; break;
             default: cout << "Lua chon khong hop le. Vui long chon lai." << endl; break;
@@ -78,6 +78,34 @@ void StudentService::viewMyInfo(Student* student, const vector<BorrowingRecord>&
     }
     cout << "-------------------------------------------------------------------" << endl;
 
+    cout << "\n--- Sach Dang Cho Duyet ---" << endl;
+    bool hasPendingBooks = false;
+    cout << "-------------------------------------------------------------------" << endl;
+    cout << "| " << left << setw(8) << "ID Phieu"
+         << "| " << left << setw(8) << "ID Sach"
+         << "| " << left << setw(25) << "Tieu de"
+         << "| " << left << setw(15) << "Ngay yeu cau" << " |" << endl;
+    cout << "-------------------------------------------------------------------" << endl;
+
+    for (const auto& record : allRecords) {
+        if (record.getStudentId() == student->getId() && record.getStatus() == 3) { // 3 = Chờ duyệt
+            for (const auto* book : allBooks) { 
+                if (book->getId() == record.getBookId()) {
+                    cout << "| " << left << setw(8) << record.getRecordId()
+                         << "| " << left << setw(8) << book->getId()
+                         << "| " << left << setw(25) << book->getTitle()
+                         << "| " << left << setw(15) << record.getBorrowDate() << " |" << endl;
+                    hasPendingBooks = true;
+                    break;
+                }
+            }
+        }
+    }
+    if (!hasPendingBooks) {
+        cout << "| " << left << setw(62) << "Ban khong co yeu cau nao cho duyet." << " |" << endl;
+    }
+    cout << "-------------------------------------------------------------------" << endl;
+
     cout << "\n--- Sach Da Lam Mat ---" << endl;
     bool hasLostBooks = false;
     cout << "-------------------------------------------------" << endl;
@@ -106,9 +134,9 @@ void StudentService::viewMyInfo(Student* student, const vector<BorrowingRecord>&
 }
 
 void StudentService::borrowBook(Student* student, vector<Book*>& books, vector<BorrowingRecord>& records, DataManager& dataManager) {
-    cout << "--- Muon Sach ---" << endl;
+    cout << "--- Gui Yeu Cau Muon Sach ---" << endl;
     Menu::viewAllBooks(books);
-    cout << "Nhap ID sach ban muon muon: ";
+    cout << "Nhap ID sach ban muon gui yeu cau: ";
     int bookId = Menu::getIntegerInput();
 
     Book* targetBook = nullptr;
@@ -125,16 +153,16 @@ void StudentService::borrowBook(Student* student, vector<Book*>& books, vector<B
     }
 
     cout << "Sach '" << targetBook->getTitle() << "' hien con " << targetBook->getAvailableQuantity() << " quyen." << endl;
-    cout << "Nhap so luong ban muon muon: ";
+    cout << "Nhap so luong ban muon gui yeu cau: ";
     int quantityToBorrow = Menu::getIntegerInput();
 
     if (quantityToBorrow <= 0) {
-        cout << "So luong muon phai lon hon 0." << endl;
+        cout << "So luong phai lon hon 0." << endl;
         return;
     }
 
     if (quantityToBorrow > targetBook->getAvailableQuantity()) {
-        cout << "Xin loi, so luong ban muon (" << quantityToBorrow 
+        cout << "Xin loi, so luong ban yeu cau (" << quantityToBorrow 
              << ") vuot qua so sach con lai (" << targetBook->getAvailableQuantity() << ")." << endl;
         return;
     }
@@ -143,20 +171,19 @@ void StudentService::borrowBook(Student* student, vector<Book*>& books, vector<B
     const int MAX_BORROW_LIMIT = 10;
 
     if (currentBorrowedCount + quantityToBorrow > MAX_BORROW_LIMIT) {
-        cout << "Xin loi, ban da muon " << currentBorrowedCount << " quyen." << endl;
-        cout << "Ban chi co the muon them toi da " << (MAX_BORROW_LIMIT - currentBorrowedCount) << " quyen nua." << endl;
+        cout << "Xin loi, ban da co " << currentBorrowedCount << " sach (dang muon + cho duyet)." << endl;
+        cout << "Ban chi co the yeu cau them toi da " << (MAX_BORROW_LIMIT - currentBorrowedCount) << " quyen nua." << endl;
         return;
     }
 
     for (int i = 0; i < quantityToBorrow; i++) {
-        targetBook->borrowBook(); 
         int newRecordId = dataManager.getNextRecordId();
-        records.push_back(BorrowingRecord(newRecordId, bookId, student->getId(), getCurrentDate(), "N/A", 0));
+        records.push_back(BorrowingRecord(newRecordId, bookId, student->getId(), getCurrentDate(), "N/A", 3));
     }
 
-    cout << "Muon thanh cong " << quantityToBorrow << " quyen sach '" << targetBook->getTitle() << "'!" << endl;
+    cout << "Da gui thanh cong " << quantityToBorrow << " yeu cau muon sach '" << targetBook->getTitle() << "'!" << endl;
+    cout << "Vui long cho Thu thu duyet yeu cau." << endl;
 }
-
 void StudentService::returnBook(Student* student, vector<Book*>& books, vector<BorrowingRecord>& records) {
     cout << "--- Tra Sach ---" << endl;
     cout << "Danh sach sach ban dang muon:" << endl;
@@ -268,60 +295,47 @@ void StudentService::reportLostBook(Student* student, vector<Book*>& books, vect
     cout << "ID phieu muon khong hop le hoac ban khong muon sach nay." << endl;
 }
 
-void StudentService::reportFoundBook(Student* student, vector<Book*>& books, vector<BorrowingRecord>& records) {
-    cout << "--- Bao Tim Duoc Sach Da Mat ---" << endl;
-    cout << "Danh sach sach ban da bao mat:" << endl;
+void StudentService::cancelBorrowRequest(Student* student, vector<BorrowingRecord>& records) {
+    cout << "--- Huy Yeu Cau Muon Sach ---" << endl;
     
-    bool hasLostBooks = false;
+    bool hasRequests = false;
+    cout << "Danh sach yeu cau dang cho duyet cua ban:" << endl;
     cout << "-------------------------------------------------" << endl;
     cout << "| " << left << setw(8) << "ID Phieu"
          << "| " << left << setw(8) << "ID Sach"
-         << "| " << left << setw(25) << "Tieu de" << " |" << endl;
+         << "| " << left << setw(25) << "Ngay yeu cau" << " |" << endl;
     cout << "-------------------------------------------------" << endl;
 
     for (const auto& record : records) {
-        if (record.getStudentId() == student->getId() && record.getStatus() == 2) { 
-            for (const auto* book : books) { 
-                if (book->getId() == record.getBookId()) {
-                    cout << "| " << left << setw(8) << record.getRecordId()
-                         << "| " << left << setw(8) << book->getId()
-                         << "| " << left << setw(25) << book->getTitle() << " |" << endl;
-                    hasLostBooks = true;
-                    break;
-                }
-            }
+        if (record.getStudentId() == student->getId() && record.getStatus() == 3) {
+            cout << "| " << left << setw(8) << record.getRecordId()
+                 << "| " << left << setw(8) << record.getBookId()
+                 << "| " << left << setw(25) << record.getBorrowDate() << " |" << endl;
+            hasRequests = true;
         }
     }
-    if (!hasLostBooks) {
-        cout << "| " << left << setw(45) << "Ban khong lam mat cuon sach nao." << " |" << endl;
+
+    if (!hasRequests) {
+        cout << "| " << left << setw(45) << "Ban khong co yeu cau nao dang cho." << " |" << endl;
         cout << "-------------------------------------------------" << endl;
         return;
     }
     cout << "-------------------------------------------------" << endl;
 
-    cout << "Nhap ID Phieu cua sach ban moi tim thay: ";
-    int recordId = Menu::getIntegerInput();
+    cout << "Nhap ID Phieu muon ban muon huy (nhap 0 de thoat): ";
+    int recordIdToCancel = Menu::getIntegerInput();
 
-    for (auto& record : records) {
-        if (record.getRecordId() == recordId && record.getStudentId() == student->getId() && record.getStatus() == 2) {
-            
-            record.setStatus(1); 
-            
-            double fine = 100000.0; 
-            student->payFine(fine); 
-
-            for (auto* book : books) { 
-                if (book->getId() == record.getBookId()) {
-                    book->setTotalQuantity(book->getTotalQuantity() + 1); 
-                    book->returnBook(); 
-                    
-                    cout << "Da ghi nhan tim thay sach '" << book->getTitle() << "'." << endl;
-                    cout << "Da hoan lai " << fixed << setprecision(0) << fine << " VND. Tong no hien tai: " << student->getFineAmount() << " VND." << endl;
-                    return;
-                }
-            }
+    if (recordIdToCancel == 0) return;
+    for (auto it = records.begin(); it != records.end(); ++it) {
+        if (it->getRecordId() == recordIdToCancel && 
+            it->getStudentId() == student->getId() && 
+            it->getStatus() == 3) 
+        {
+            records.erase(it);
+            cout << "Da huy thanh cong yeu cau co ID: " << recordIdToCancel << "." << endl;
+            return;
         }
     }
 
-    cout << "ID phieu muon khong hop le hoac do khong phai sach ban bao mat." << endl;
+    cout << "Khong tim thay yeu cau hop le voi ID: " << recordIdToCancel << "." << endl;
 }

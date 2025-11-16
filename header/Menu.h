@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include "Book.h"
-
 using namespace std;
 
 class Menu {
@@ -13,7 +12,6 @@ public:
     static void clearScreen();
     static void pause();
     static int getIntegerInput();
-
     static string getStringNoSpaces();
     static bool isValidEmailFormat(const string& email);
 

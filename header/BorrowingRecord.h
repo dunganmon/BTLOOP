@@ -12,7 +12,7 @@ private:
     int studentId;
     string borrowDate;
     string returnDate;
-    int status; // 0: Dang muon, 1: Da tra, 2: Lam mat
+    int status; // 0: Dang muon, 1: Da tra, 2: Lam mat, 3: Cho duyet
 
 public:
     BorrowingRecord(int recId = 0, int bId = 0, int sId = 0, string bDate = "", string rDate = "N/A", int st = 0)
@@ -27,7 +27,7 @@ public:
 
     void setReturnDate(const string& date) { this->returnDate = date; }
     void setStatus(int newStatus) { this->status = newStatus; }
-
+    void setBorrowDate(const string& date) { this->borrowDate = date; }
     // Chuyển đổi thành chuỗi CSV
     string toCSV() const {
         return to_string(recordId) + "," + to_string(bookId) + "," + to_string(studentId) + "," +
