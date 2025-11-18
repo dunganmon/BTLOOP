@@ -53,18 +53,20 @@ string Menu::getStringNoSpaces() {
 }
 
 bool Menu::isValidEmailFormat(const string& email) {
+    if (email.length() < 5) return false;
+    if (email.find(' ') != string::npos) return false;
+    if (email.find("..") != string::npos) return false;
     size_t atPos = email.find('@');
-    size_t lastAtPos = email.rfind('@');  
-    size_t dotPos = email.rfind('.');
-
-    if (atPos == string::npos || atPos == 0 || 
-        dotPos == string::npos || dotPos <= atPos + 1 || 
-        dotPos == email.length() - 1 ||
-        atPos != lastAtPos) 
-    {
+    size_t lastAtPos = email.rfind('@');
+    if (atPos == string::npos || atPos == 0 || atPos == email.length() - 1 || atPos != lastAtPos)
         return false;
-    }
-    return true;
+    size_t dotPos = email.rfind('.');
+    if (dotPos == string::npos || dotPos < atPos) return false;
+    if (dotPos == email.length() - 1) return false;
+    if (email[0] == '.') return false;            
+    if (email[atPos - 1] == '.') return false;   
+    if (email[atPos + 1] == '.') return false;    
+    return true; 
 }
 
 string Menu::getStringPassword() {
