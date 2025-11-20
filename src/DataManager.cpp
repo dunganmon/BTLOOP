@@ -168,9 +168,8 @@ void DataManager::saveAllData(const vector<Person*>& users, const vector<Book*>&
     recordFileStream.close();
 }
 
-// Nằm trong file: DataManager.cpp
 
-// **** THAY THẾ TOÀN BỘ HÀM NÀY BẰNG CODE BÊN DƯỚI ****
+
 bool DataManager::importBooksFromFile(const string& filename, vector<Book*>& books) {
     ifstream fileStream(filename);
     if (!fileStream.is_open()) {
@@ -179,13 +178,10 @@ bool DataManager::importBooksFromFile(const string& filename, vector<Book*>& boo
     }
 
     string line;
-    // --- Counters mới để báo cáo chi tiết ---
     int newCount = 0;
     int updateCount = 0;
     int failCount = 0;
     
-    // (Tùy chọn) Bỏ qua dòng tiêu đề
-    // getline(fileStream, line); 
 
     while (getline(fileStream, line)) {
         if (line.empty()) continue; // Bỏ qua các dòng trống

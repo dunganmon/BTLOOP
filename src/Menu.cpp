@@ -58,14 +58,14 @@ bool Menu::isValidEmailFormat(const string& email) {
     if (email.find("..") != string::npos) return false;
     size_t atPos = email.find('@');
     size_t lastAtPos = email.rfind('@');
-    if (atPos == string::npos || atPos == 0 || atPos == email.length() - 1 || atPos != lastAtPos)
+    if (atPos == string::npos || atPos == 0 || atPos == email.length() - 1 || atPos != lastAtPos)// Phải có @, không ở đầu, không ở cuối, và chỉ duy nhất 1 @
         return false;
     size_t dotPos = email.rfind('.');
-    if (dotPos == string::npos || dotPos < atPos) return false;
-    if (dotPos == email.length() - 1) return false;
-    if (email[0] == '.') return false;            
-    if (email[atPos - 1] == '.') return false;   
-    if (email[atPos + 1] == '.') return false;    
+    if (dotPos == string::npos || dotPos < atPos) return false; // Phải có dấu chấm, và dấu chấm cuối cùng phải nằm sau @
+    if (dotPos == email.length() - 1) return false; // Dấu chấm không được nằm ở cuối cùng (vd: user@gmail.com.)
+    if (email[0] == '.') return false;     // Chặn: .user@...       
+    if (email[atPos - 1] == '.') return false;  // Chặn: user.@... 
+    if (email[atPos + 1] == '.') return false;   // Chặn: user@.com 
     return true; 
 }
 

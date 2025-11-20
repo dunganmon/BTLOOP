@@ -74,6 +74,25 @@ void LibrarianService::addBook(vector<Book*>& books, DataManager& dataManager) {
     } while (quantity <= 0);
 
     int pubYear = Menu::getPublicationYearInput();
+    
+    for (auto* book : books) {
+        if (book->getBookType() == bookType &&
+            book->getTitle() == title &&
+            book->getAuthor() == author &&
+            book->getPublicationYear() == pubYear) 
+        {
+            book->setTotalQuantity(book->getTotalQuantity() + quantity);
+            book->setAvailableQuantity(book->getAvailableQuantity() + quantity);
+            
+            cout << "\n--------------------------------------------------" << endl;
+            cout << "Phat hien sach nay da co trong thu vien (ID: " << book->getId() << ")." << endl;
+            cout << "Da cap nhat them " << quantity << " quyen vao kho." << endl;
+            cout << "Tong so luong hien tai: " << book->getTotalQuantity() << endl;
+            cout << "--------------------------------------------------" << endl;
+            return; 
+        }
+    }
+    
     int newId = dataManager.getNextBookId();
 
     switch (bookType) {
